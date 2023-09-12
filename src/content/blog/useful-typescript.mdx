@@ -1,0 +1,125 @@
+---
+title: Useful TypeScript Code
+description: Useful functions and types for TypeScript
+date: 2023-09-07T03:18:13.471Z
+updated: 2023-09-09T01:50:56.088Z
+image: $/assets/images/typescript.png
+tags:
+  - TypeScript
+---
+import Collapsible from "$/components/markdown/collapsible.astro";
+
+## Table of Contents
+
+## Type Declarations
+
+### View Transition
+
+The `startViewTransition` function is a method on the `document` object which enables view transitions. The following types are based on the documentation at MDN. Since the API is currently experimental, you may need to add the following type to your type declaration file to avoid errors. 
+
+<div class="button-row">
+  [Google Article](btn::https://developer.chrome.com/docs/web-platform/view-transitions/)
+  [MDN](btn::https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition)
+</div>
+
+```typescript
+declare global {
+	interface ViewTransition {
+		/**
+		 * A Promise that fulfills once the transition animation is finished, 
+		 * and the new page view is visible and interactive to the user.
+		 */
+		finished: Promise<void>;
+		/**
+		 * A Promise that fulfills once the pseudo-element tree is created 
+		 * and the transition animation is about to start.
+		 */
+		ready: Promise<void>;
+		/**
+		 * A Promise that fulfills when the promise returned by the 
+		 * document.startViewTransition()'s callback fulfills.
+		 */
+		updateCallbackDone: Promise<void>;
+		/**
+		 * Skips the animation part of the view transition, but doesn't skip 
+		 * running the document.startViewTransition() callback that updates the DOM.
+		 */
+		skipTransition: () => void;
+	}
+
+	type ViewTransitionCallback = (() => Promise<void>) | (() => void);
+
+	interface Document {
+		startViewTransition: (callback: ViewTransitionCallback) => ViewTransition;
+	}
+}
+```
+
+<Collapsible title="Using in SvelteKit">
+  In SvelteKit, you can add the above type declaration to a file in the `src` directory, such as `src/types.d.ts`. Then you can add view transitions to your SvelteKit app by following the video below, ignoring the `@ts-ignore` comments.
+
+  [YouTube](embed::https://www.youtube.com/watch?v=q_2irZO4SS8)
+</Collapsible>
+
+## Set Nested Value
+
+Below is a `setValue` function which takes an object, a path, and a value. The path is a string of dot-separated keys. The function should set the value at the given path. The path parameter will have autocomplete and the value parameter will be required to be of the same type as the property at that path. See the playground for examples. This function works very similarly to [lodash.set](https://lodash.com/docs/4.17.15#set), but with stronger type safety.
+
+The [SchemaForm](/blog/sveltekit-schemaform) component for SvelteKit is also using a modified version of this function.
+
+<div class="button-row">
+  [Playground](btn::https://www.typescriptlang.org/play?ts=4.2.3#code/C4TwDgpgBAkgJgDwDwBUA0UDSA+KBeLKCBYCAOzgGcoBrCEAewDMoUoB+VgbUwF0oAXAFgAUFChkArgFsARhABOREuSq16zVh0LFSFagAMAJAG8pcxQF8D2lF3PyF-ARIgA3RYNceFo0aEgoACkGAEsyJEwMAAVcAkxlPTVKYAVwgHMoAB8JGUcOUXFoxNVqFLSyTJyHT3ZCqGMTTEtTACJWkv0oYs52r1aAOlaWk2jrepcyd09J6YUAbj8RAOhohXd8KHs5jAAGDABGDAAmDABmDAAWDABWDAA2DAB2DAAODABOQ-36g6OoA6nAEXAHXAF3AGPAEvAHvAFfKDHfZQAao3ZcXi8JYrboAQ2AAAtKKgMAARTpqGpKAgHXZxLak-i6UpbKY+ficNkzLTMroMWQAKwgAGNgAUxFATFsEuF1IwWCheABadguBK85KpDLZXIWJR1CXiRrNGw5ELhSIxfFE1A8XgxdZuLiM7DYeriWY+eqWLh0eWsZxQdpLAD0IaVEcjUejUei1qgblxABtJNAcUqoClcQpgDG8-mC4Wi8XC9jwKtrQA1ZOpkndCnUOOE4noKCXV2bYoawymcJMTyYeiWAa9sj9pQAJQgKXGEs4U5SDbxzaQ8GQrcHIGwVzdc+XBOrKYgq8Qdc326gC+Au493kUE1gp9bsVD4ZL0abBITNbT5agGdUf932AkDQNLERRCYSQyFFUIGDITMIGAQ9a3qNhu0lLY-RccoMl4FxcTIEAoEsNB6i7FQuk-Fsd1EbAAAp+QFFxWzAa0XGiDBEyPDiqx-OtYgASklepQhYeiVk0NjCXwPACFaXDKlaYSTHdKBhXgxcwAAGVCRcCGkgkBkoMAk1CYB6MGZTFkNdTNLFJNcRSTdNh0vTgAGMAGDAejBJs8RxA0sgtLCMhSGpKA3JSAZ1jgSRhQgei1PEejcWFYUZEkRzgAYBQXClLgEBwrVKnwqBCOI0j1MkBR1jClCIGKioql1RxhLwXBVNsgKoDEqBUvSzLstyrgMtq8hkJ-fg5IIaC4AgJhwggOBBOSnrysG6QsvxEaxrqyaj2myVLH89bxHWYAaoQtKMq24aFFGmr9oa3hTp60i1qYtS-LUvqJPLTRHOc+goAAQjkoM5oWpa4GUkTusi0Lwq4IHgE3I7uNTN6Aouq6oCY7HLG9epcYUBCCdEImIJEcJwqYNLoAAIQYfFSSQ3FQiTaguvEWQWeASh8rUvn8QOJqMmxkXgGOSY8kUU6TvqSgCVCMBBagABBWrcRAJAAGUVbAXcqdpxR6YSqADdV+HxGV1WADlcWkRrMxK9JKdEILFyltngA5rmXGZ1n2c56gCB5qApfViPef5sWg0cuBiNkI9WjI2ypZlgF0-ED6JTttWXC4NSpQLx3nZcVpHOFBQGEoCAOip8QsRERWRC9sVJDAOB8WWq3C8tw2MU2LgI7Lp2XdaP2woUGRWkpluwzApU9fihLKEoKCkyTYjcRTtMGEQsVCWgTHf0CJhcqgE-I4gJMGAAd0i61DCjgYpYOAwMAMAvKAMZeAF5lEPXA6qYkoSh9iHLmOcGhvw-l-eoU80iEXSEmBuogfoiBAQ1cBsdg5+1DjAhShtKADF2GneoXce6kDgP3SgXBdgt0wTiIOwBqKdhfkgVhvt-aUF3GGa+f5WHsPklHDoORiGq0oOIoMcC44yNaHI-ExwZE-xISOMwcsFDWB1GoqRGiqTDnHs7Aw-ghH82og1DhhIGpcP5jwwhUBhEv34SGcQLCLEvysQQRSLUqQ6i6gInqH9xaVBskEgKmdZZ6nCW4ywOp+4YlfMWRmABRbSAB5AA6rAPWrAAASqTcl6wAKpFMARUypVTqkRiWNgn8uDI72KgZQGBei1ZkOMobcuEAEESinuZQioRhTzxEH5KAAiGA0B1qIEMAAqKAUEYLADgghepR47H4N4RgSRHTdhdIdhPVoDFkpMUDs0gh0Dn6Ekrr-TpxiG5cR-KE92YzzlbNDlAOZIYliiCAA)
+  [Source](btn::https://stackoverflow.com/questions/67607069/typescript-set-value-type-of-a-deep-nested-object-path)
+</div>
+
+<div class="warning-box">
+  The sort of recursive conditional types with template literal type manipulation being done in `Paths<T>` and `PathValue<T, P>` are taxing on the compiler (you can easily get explicit recursion limit warnings, or worse, exponentially long compile times) and have various edge cases.
+</div>
+
+```typescript
+type Idx<T, K> = K extends keyof T ? T[K] :
+  number extends keyof T ? K extends `${number}` ? T[number] : never : never
+
+type Join<K, P> = K extends string | number ?
+  P extends string | number ?
+  `${K}${"" extends P ? "" : "."}${P}`
+  : never : never;
+
+type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...0[]]
+
+type Paths<T, D extends number = 10> = [D] extends [never] ? never : T extends object ?
+  { [K in keyof T]-?: K extends string | number ?
+    `${K}` | Join<K, Paths<T[K], Prev[D]>>
+    : never
+  }[keyof T] : ""
+
+type PathValue<T, P extends Paths<T, 4>> = P extends `${infer Key}.${infer Rest}`
+  ? Rest extends Paths<Idx<T, Key>, 4>
+  ? PathValue<Idx<T, Key>, Rest>
+  : never
+  : Idx<T, P>
+
+function setValue<
+  T extends { [key: string]: any },
+  P extends Paths<T, 4>
+>(obj: T, path: P, value: PathValue<T, P>) {
+  if (typeof path === "string") {
+    const pList = path.split(".");
+    const lastKey = pList.pop();
+    const pointer = pList.reduce(
+      (accumulator: { [x: string]: any }, currentValue: string | number) => {
+        if (accumulator[currentValue] === undefined)
+          accumulator[currentValue] = {};
+        return accumulator[currentValue];
+      },
+      obj
+    );
+    if (typeof lastKey !== "undefined") {
+      pointer[lastKey] = value;
+      return obj;
+    }
+  }
+  return obj;
+}
+```

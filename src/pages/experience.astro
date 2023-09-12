@@ -1,0 +1,63 @@
+---
+import PageArticle from "$/components/page/article.astro";
+import PageBody from "$/components/page/body.astro";
+import PageSectionItem from "$/components/page/section-item.astro";
+import PageSectionItems from "$/components/page/section-items.astro";
+import PageSection from "$/components/page/section.astro";
+import PortfolioLayout from "$/layouts/portfolio.astro";
+import { sorter } from "$/util";
+import { getCollection } from "astro:content";
+
+const experience = await getCollection("experience");
+---
+
+<PortfolioLayout title="Experience">
+	<PageBody>
+		<PageArticle class="w-full max-w-4xl">
+			{
+				experience
+					.sort((a, b) => sorter(a.data.id, b.data.id))
+					.map(({ data }) => (
+						<PageSection>
+							<h2 class="section-heading">{data.name}</h2>
+							<PageSectionItems>
+								{data.items
+									.sort((a, b) => sorter(a.created_at, b.created_at))
+									.map((exp) => (
+										<PageSectionItem image={exp.image}>
+											<h3 class="m-0 font-robo-flex text-base font-medium">
+												{!exp.nameLink ? (
+													exp.name
+												) : (
+													<a href={exp.nameLink} target="_blank" rel="noreferrer noopener" class="font-normal text-secondary">
+														{exp.name}
+													</a>
+												)}
+											</h3>
+											<p class="mb-0 text-sm font-light text-theme-faded">
+												{!exp.h4Link ? (
+													exp.h4
+												) : (
+													<a href={exp.h4Link} target="_blank" rel="noreferrer noopener" class="font-normal text-secondary">
+														{exp.h4}
+													</a>
+												)}
+											</p>
+											<p class="mb-0 text-sm font-light text-theme-faded">
+												{!exp.h5Link ? (
+													exp.h5
+												) : (
+													<a href={exp.h5Link} target="_blank" rel="noreferrer noopener" class="font-normal text-secondary">
+														{exp.h5}
+													</a>
+												)}
+											</p>
+										</PageSectionItem>
+									))}
+							</PageSectionItems>
+						</PageSection>
+					))
+			}
+		</PageArticle>
+	</PageBody>
+</PortfolioLayout>

@@ -1,0 +1,147 @@
+---
+import type { Props as HeadProps } from "$/components/head.astro";
+import ResponsiveImage from "$/components/responsive-image.astro";
+import { formatDate, slugify, sorter } from "$/util";
+import PortfolioLayout from "./portfolio.astro";
+import CodePen from "$/components/markdown/codepen.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props extends HeadProps {
+	data: CollectionEntry<"blog">["data"];
+	slug: CollectionEntry<"blog">["slug"];
+}
+const {
+	slug,
+	data: { title, description, image, codepen, date, updated, tags }
+} = Astro.props;
+
+const youTubeId = typeof image === "string" && image.match(/v=([^&]+)/)?.[1];
+---
+
+<PortfolioLayout
+	{title}
+	{description}
+	image={typeof image === "string" ? image : image.src}
+	stylesheets={["/styles/prism-one-dark.css"]}
+	articleMeta={{
+		published_date: date.toISOString(),
+		...(updated && { modified_date: updated.toISOString() })
+	}}
+	backTo={{
+		href: "/blog",
+		text: "Blog"
+	}}
+>
+	<div class="post mx-auto flex max-w-7xl justify-center gap-6">
+		<article class="flex max-w-4xl flex-1 flex-col 2xl:mx-0">
+			<section class="flex flex-col gap-4" transition:name={slugify(`image ${slug}`)}>
+				<p class="text-center text-sm text-theme-faded md:text-left" aria-label="Date published">
+					Published: <span class="underline decoration-dotted underline-offset-2">{formatDate(date)}</span>
+					{
+						updated && (
+							<span class="block 2xs:inline 2xs:pl-4">
+								Updated: <span class="underline decoration-dotted underline-offset-2">{formatDate(updated)}</span>
+							</span>
+						)
+					}
+				</p>
+				{
+					codepen ? (
+						<CodePen {...codepen} />
+					) : youTubeId ? (
+						<iframe src={`https://www.youtube.com/embed/${youTubeId}`} class="aspect-video w-full border-0" allowfullscreen />
+					) : typeof image === "string" ? (
+						<img
+							src={image}
+							alt={title}
+							id="post-image"
+							class="h-full w-full object-cover object-center shadow shadow-black/50"
+						/>
+					) : (
+						<div class="relative aspect-video">
+							<ResponsiveImage
+								src={image}
+								alt={title}
+								id="post-image"
+								sizes={[500, 700, 900]}
+								class="h-full w-full object-cover object-center shadow shadow-black/50"
+							/>
+						</div>
+					)
+				}
+				{
+					tags.length && (
+						<nav class="flex gap-4">
+							<h2 class="hidden text-xl sm:block">Tags</h2>
+							<ul class="flex flex-1 flex-wrap justify-center gap-2 sm:justify-end">
+								{tags
+									.sort((a, b) => sorter(a, b))
+									.map((tag) => (
+										<li>
+											<a href={`/blog/${slugify(tag)}`} class="btn btn-sm uppercase">
+												{tag}
+											</a>
+										</li>
+									))}
+							</ul>
+						</nav>
+					)
+				}
+			</section>
+			<section class="post-body">
+				<slot />
+			</section>
+		</article>
+
+		<slot name="toc" />
+	</div>
+
+	<button id="to-top" class="btn btn-primary fixed bottom-4 right-4 z-20 hidden aspect-square h-14 w-14 rounded-full p-2">
+		<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+			><path fill="currentColor" d="M14 20h-4v-9l-3.5 3.5l-2.42-2.42L12 4.16l7.92 7.92l-2.42 2.42L14 11v9Z"></path></svg
+		>
+	</button>
+</PortfolioLayout>
+
+<script>
+	const btnScrollToTop = document.querySelector("#to-top") as HTMLButtonElement;
+	const postImage = document.querySelector("#post-image") as HTMLImageElement;
+	const postImagePosition = postImage?.getBoundingClientRect().top || 0;
+	const postImageHeight = postImage?.getBoundingClientRect().height || 0;
+
+	btnScrollToTop?.addEventListener("click", () => {
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth"
+		});
+	});
+
+	window.addEventListener("scroll", () => {
+		requestAnimationFrame(() => {
+			if (window.scrollY > postImagePosition + postImageHeight) {
+				btnScrollToTop.classList.add("flex");
+				btnScrollToTop.classList.remove("hidden");
+			} else {
+				btnScrollToTop.classList.add("hidden");
+				btnScrollToTop.classList.remove("flex");
+			}
+		});
+	});
+</script>
+
+<style lang="scss" is:global>
+	.post-body #table-of-contents + ul li {
+		@apply flex flex-col gap-2;
+	}
+
+	.post-body #table-of-contents ~ :not(#table-of-contents):not(ul):not(li) + ul {
+		@apply mb-6;
+	}
+
+	.post-body #table-of-contents {
+		@apply 2xl:hidden;
+		+ ul {
+			@apply 2xl:hidden;
+		}
+	}
+</style>

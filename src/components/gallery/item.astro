@@ -1,0 +1,23 @@
+---
+import ResponsiveImage from "../responsive-image.astro";
+import Wrapper from "./wrapper.astro";
+
+interface Props {
+	title: string;
+	subtitle: string;
+	description: string | null;
+	link: string | null | undefined;
+	image: ImageMetadata;
+}
+
+const { title, subtitle, description, link, image } = Astro.props;
+---
+
+<Wrapper {title} {subtitle} link={link || ""}>
+	<ResponsiveImage src={image} alt={title} class="h-full w-full object-cover object-center" sizes={[424, 640]} />
+	<div class="absolute inset-0 m-2 flex flex-col justify-end bg-gradient-to-b from-transparent to-black p-2 text-white">
+		<h3 class="my-0 text-xl font-semibold drop-shadow-sm">{title}</h3>
+		{subtitle && <h4 class="m-0 text-sm font-light drop-shadow-sm">{subtitle}</h4>}
+		{description && <div class="mt-1 text-xs font-light text-white/75 drop-shadow-sm">{description}</div>}
+	</div>
+</Wrapper>

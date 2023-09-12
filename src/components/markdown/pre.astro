@@ -1,0 +1,42 @@
+---
+import { cn } from "$/util";
+---
+
+<script>
+	import { copy } from "$/assets/js/svgs";
+
+	function copyBlock(el: Element) {
+		navigator.clipboard.writeText(el.parentNode?.querySelector("pre")?.innerText || "");
+		document.querySelectorAll(".copy").forEach((btn) => (btn.innerHTML = copy));
+		el.innerHTML = "Copied";
+	}
+
+	document.addEventListener("astro:page-load", () => {
+		document.querySelectorAll("article > section > .pre-block > .copy").forEach((btn) => {
+			btn.addEventListener("click", () => copyBlock(btn));
+		});
+	});
+</script>
+
+<div class="pre-block relative">
+	<pre
+		class={cn(
+			Astro.props.class,
+			"max-w-portfolio mb-4 overflow-x-auto rounded-lg bg-base-300 text-sm text-base-content md:p-4",
+			"group-[.combined-block]:bg-transparent group-[.combined-block]:my-0 group-[.combined-block]:p-0"
+		)}><slot /></pre>
+	<button
+		role="button"
+		class={cn(
+			"copy absolute right-2 top-2 flex items-center justify-center rounded-md",
+			"bg-primary p-2 font-sans text-xs font-bold group-[.combined-block]:hidden"
+		)}
+	>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="h-4 w-4"
+			><path
+				fill="currentColor"
+				d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z"
+			></path></svg
+		>
+	</button>
+</div>

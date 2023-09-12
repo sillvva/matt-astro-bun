@@ -1,0 +1,58 @@
+---
+import MeDetails from "$/components/me.astro";
+import PageArticle from "$/components/page/article.astro";
+import PageBody from "$/components/page/body.astro";
+import PageSection from "$/components/page/section.astro";
+import PortfolioLayout from "$/layouts/portfolio.astro";
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+
+const links = await getCollection("links", ({ data: { image } }) => !!image);
+
+const age = (birthday: Date) => {
+	const ageDifMs = Date.now() - birthday.getTime();
+	const ageDate = new Date(ageDifMs);
+	return Math.abs(ageDate.getUTCFullYear() - 1970);
+};
+---
+
+<PortfolioLayout title="About Me">
+	<PageBody>
+		<PageArticle class="w-full max-w-4xl">
+			<PageSection>
+				<div class="flex flex-col md:flex-row">
+					<div class="mb-5 basis-full md:mb-0 md:basis-6/12">
+						<p>
+							Experienced Full Stack Web Developer with a demonstrated history of working in the wireless industry. Skilled in
+							Svelte, React, PHP, HTML, JavaScript, TypeScript, and CSS. Strong engineering professional with a Bachelor&rsquo;s
+							Degree focused in Computer and Information Systems Security/Information Assurance from Dakota State University.
+						</p>
+					</div>
+					<div class="basis-full md:basis-6/12">
+						<div class="me-details flex flex-wrap">
+							<MeDetails name="Name" value="Matt DeKok" />
+							<MeDetails name="Age" value={age(new Date("1988-05-09T00:00:00-05:00"))} />
+							<MeDetails name="Location" value="SD" />
+							<MeDetails name="Experience" value={`${age(new Date("2006-06-01T00:00:00-05:00"))} years`} />
+							<MeDetails name="Hobbies" value="Dungeons & Dragons, Pokemon, coding, watching anime, reading manga" full />
+						</div>
+					</div>
+				</div>
+			</PageSection>
+			<PageSection class="flex flex-col items-center gap-5 py-6">
+				<h1 class="font-montserrat text-2xl font-bold">Links</h1>
+				<div class="flex flex-wrap justify-center gap-8">
+					{
+						links.map((link) =>
+							link.data.image ? (
+								<a href={`/r/${link.id}`} title={link.data.title} target="_blank" rel="noreferrer noopener">
+									<Image src={link.data.image} alt={link.data.title} height={24} class="h-6" />
+								</a>
+							) : null
+						)
+					}
+				</div>
+			</PageSection>
+		</PageArticle>
+	</PageBody>
+</PortfolioLayout>

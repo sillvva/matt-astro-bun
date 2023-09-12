@@ -1,0 +1,17 @@
+{
+	"title": "Personal Website",
+	"subtitle": "Version 4 (Next.js)",
+	"image": "$/assets/images/preview-me3.jpg",
+	"link": "https://github.com/sillvva/mattdekok.react",
+	"date": "2022-07-01T20:07:18.000Z",
+	"tags": [
+		{ "name": "Next.js" },
+		{ "name": "TypeScript" },
+		{ "name": "SCSS" },
+		{ "name": "TailwindCSS" },
+		{ "name": "Node.js" },
+		{ "name": "Firebase" },
+		{ "name": "Vercel" },
+		{ "name": "Cloudflare" }
+	]
+}

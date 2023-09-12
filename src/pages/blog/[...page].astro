@@ -1,0 +1,171 @@
+---
+import Pagination from "$/components/pagination.astro";
+import ResponsiveImage from "$/components/responsive-image.astro";
+import PortfolioLayout from "$/layouts/portfolio.astro";
+import { cn, formatDate, slugify, sorter } from "$/util";
+import type { GetStaticPaths, InferGetStaticPropsType, Page } from "astro";
+import { Image } from "astro:assets";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const posts = await getCollection("blog");
+	const totalPosts = posts.length;
+	const perPage = 12;
+
+	type PaginatedTagPosts = {
+		params: {
+			tag?: string;
+			page?: string;
+		};
+		props: {
+			tag?: string;
+			tags: string[];
+			totalPosts: number;
+			page: Page<CollectionEntry<"blog">>;
+		};
+	};
+
+	const tags = posts.reduce<string[]>((acc, post) => {
+		post.data.tags.forEach((tag) => {
+			if (!acc.includes(tag)) {
+				acc.push(tag);
+			}
+		});
+		return acc;
+	}, []);
+
+	const allPosts: PaginatedTagPosts[] = [
+		...tags.flatMap((tag) =>
+			paginate(
+				posts.filter((p) => p.data.tags.includes(tag)).sort((a, b) => sorter(b.data.date, a.data.date)),
+				{
+					pageSize: perPage,
+					params: {
+						tag: slugify(tag)
+					},
+					props: {
+						tag,
+						tags,
+						totalPosts
+					}
+				}
+			)
+		),
+		...paginate(
+			posts.sort((a, b) => sorter(b.data.date, a.data.date)),
+			{
+				pageSize: perPage,
+				props: {
+					tags,
+					totalPosts
+				}
+			}
+		)
+	];
+
+	const paths = allPosts.map((path) => {
+		return {
+			...path,
+			params: {
+				page:
+					(path.params.tag || path.params.page) && [slugify(path.params.tag || ""), path.params.page].filter(Boolean).join("/")
+			}
+		};
+	});
+
+	return paths;
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const {
+	tag,
+	tags,
+	totalPosts,
+	page: {
+		data,
+		currentPage,
+		lastPage,
+		size,
+		url: { next, prev }
+	}
+} = Astro.props;
+---
+
+<PortfolioLayout title="Blog">
+	<div class="flex flex-col items-center gap-4 lg:gap-6">
+		<Pagination
+			{currentPage}
+			{lastPage}
+			{tags}
+			{tag}
+			hasPages={totalPosts > size}
+			tagPathFormat="/blog/:tag"
+			position="top"
+			url={{ next, prev, format: tag ? `/blog/${slugify(tag)}/:page` : `/blog/:page` }}
+		/>
+		<div class="grid w-full grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-5">
+			{
+				data.map((post) => (
+					<a
+						href={`/blog/${post.slug}`}
+						class={cn(
+							"card min-w-[15rem] rounded-lg bg-base-200/60 transition-all hover:bg-base-200 motion-safe:hover:scale-105",
+							"shadow-md shadow-black/15 hover:shadow-lg hover:shadow-black/25"
+						)}
+					>
+						<div class="card-body p-4">
+							<div class="flex flex-col">
+								<h2 class="card-title text-lg text-theme-heading wrap-balance">{post.data.title}</h2>
+								{post.data.date && (
+									<span class="mb-2 text-sm text-theme-faded underline decoration-dotted underline-offset-2">
+										{formatDate(post.data.date)}
+									</span>
+								)}
+							</div>
+							<p class="text-sm">{post.data.description}</p>
+						</div>
+						<figure class="h-40" transition:name={slugify(`image ${post.slug}`)}>
+							{typeof post.data.image === "string" ? (
+								post.data.image.match(/v=([^&]+)/)?.[1] ? (
+									<Image
+										src={`https://img.youtube.com/vi/${post.data.image.match(/v=([^&]+)/)?.[1]}/0.jpg`}
+										alt={post.data.title}
+										class="h-full w-full object-cover object-center"
+										width={640}
+										height={360}
+									/>
+								) : (
+									<Image
+										src={post.data.image}
+										alt={post.data.title}
+										class="h-full w-full object-cover object-center"
+										width={640}
+										height={360}
+									/>
+								)
+							) : (
+								<ResponsiveImage
+									src={post.data.image}
+									alt={post.data.title}
+									sizes={[424, 640]}
+									class="h-full w-full object-cover object-center"
+								/>
+							)}
+						</figure>
+					</a>
+				))
+			}
+		</div>
+		<Pagination
+			{currentPage}
+			{lastPage}
+			{tags}
+			{tag}
+			hasPages={totalPosts > size}
+			tagPathFormat="/blog/:tag"
+			position="bottom"
+			url={{ next, prev, format: tag ? `/blog/${slugify(tag)}/:page` : `/blog/:page` }}
+		/>
+	</div>
+</PortfolioLayout>
